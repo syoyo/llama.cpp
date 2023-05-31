@@ -33,6 +33,10 @@ models/*
 /benchmark-matmult
 /vdot
 /Pipfile
+/redpajama-chat
+/redpajama
+/core
+/quantize-gptneox
 
 build-info.h
 arm_neon.h
@@ -48,3 +52,4 @@ qnt-*.txt
 perf-*.txt
 
 examples/jeopardy/results.txt
+llama.dot
