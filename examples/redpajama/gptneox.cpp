@@ -503,7 +503,7 @@ struct gptneox_file_loader {
                 case GGML_TYPE_F16:
                 case GGML_TYPE_Q4_0:
                 case GGML_TYPE_Q4_1:
-                case GGML_TYPE_Q4_2:
+                //case GGML_TYPE_Q4_2:
                 case GGML_TYPE_Q5_0:
                 case GGML_TYPE_Q5_1:
                 case GGML_TYPE_Q8_0:
@@ -581,7 +581,7 @@ struct gptneox_file_saver {
             case GGML_TYPE_F16:
             case GGML_TYPE_Q4_0:
             case GGML_TYPE_Q4_1:
-            case GGML_TYPE_Q4_2:
+            //case GGML_TYPE_Q4_2:
             case GGML_TYPE_Q5_0:
             case GGML_TYPE_Q5_1:
             case GGML_TYPE_Q8_0:
@@ -873,7 +873,7 @@ static const char *gptneox_ftype_name(enum gptneox_ftype ftype) {
         case GPTNEOX_FTYPE_MOSTLY_Q4_1: return "mostly Q4_1";
         case GPTNEOX_FTYPE_MOSTLY_Q4_1_SOME_F16:
                                       return "mostly Q4_1, some F16";
-        case GPTNEOX_FTYPE_MOSTLY_Q4_2: return "mostly Q4_2";
+        //case GPTNEOX_FTYPE_MOSTLY_Q4_2: return "mostly Q4_2";
         //case GPTNEOX_FTYPE_MOSTLY_Q4_3: return "mostly Q4_3";
         case GPTNEOX_FTYPE_MOSTLY_Q5_0: return "mostly Q5_0";
         case GPTNEOX_FTYPE_MOSTLY_Q5_1: return "mostly Q5_1";
@@ -2068,7 +2068,7 @@ static void gptneox_model_quantize_internal(const std::string & fname_inp, const
     switch (ftype) {
         case GPTNEOX_FTYPE_MOSTLY_Q4_0: quantized_type = GGML_TYPE_Q4_0; break;
         case GPTNEOX_FTYPE_MOSTLY_Q4_1: quantized_type = GGML_TYPE_Q4_1; break;
-        case GPTNEOX_FTYPE_MOSTLY_Q4_2: quantized_type = GGML_TYPE_Q4_2; break;
+        //case GPTNEOX_FTYPE_MOSTLY_Q4_2: quantized_type = GGML_TYPE_Q4_2; break;
         case GPTNEOX_FTYPE_MOSTLY_Q5_0: quantized_type = GGML_TYPE_Q5_0; break;
         case GPTNEOX_FTYPE_MOSTLY_Q5_1: quantized_type = GGML_TYPE_Q5_1; break;
         case GPTNEOX_FTYPE_MOSTLY_Q8_0: quantized_type = GGML_TYPE_Q8_0; break;
