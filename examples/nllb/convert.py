@@ -113,15 +113,25 @@ def make_tensors_list() -> List[str]:
     ]
     for i in range(80):  # maximum number of layer
         ret += [
-            f'layers.{i}.attention.wq.weight',
-            f'layers.{i}.attention.wk.weight',
-            f'layers.{i}.attention.wv.weight',
-            f'layers.{i}.attention.wo.weight',
-            f'layers.{i}.attention_norm.weight',
-            f'layers.{i}.feed_forward.w1.weight',
-            f'layers.{i}.feed_forward.w2.weight',
-            f'layers.{i}.feed_forward.w3.weight',
-            f'layers.{i}.ffn_norm.weight',
+            f'layers.encoder.{i}.attention.wq.weight',
+            f'layers.encoder.{i}.attention.wk.weight',
+            f'layers.encoder.{i}.attention.wv.weight',
+            f'layers.encoder.{i}.attention.wo.weight',
+            f'layers.encoder.{i}.attention_norm.weight',
+            f'layers.encoder.{i}.feed_forward.w1.weight',
+            f'layers.encoder.{i}.feed_forward.w2.weight',
+            f'layers.encoder.{i}.feed_forward.w3.weight',
+            f'layers.encoder.{i}.ffn_norm.weight',
+
+            f'layers.decoder.{i}.attention.wq.weight',
+            f'layers.decoder.{i}.attention.wk.weight',
+            f'layers.decoder.{i}.attention.wv.weight',
+            f'layers.decoder.{i}.attention.wo.weight',
+            f'layers.decoder.{i}.attention_norm.weight',
+            f'layers.decoder.{i}.feed_forward.w1.weight',
+            f'layers.decoder.{i}.feed_forward.w2.weight',
+            f'layers.decoder.{i}.feed_forward.w3.weight',
+            f'layers.decoder.{i}.ffn_norm.weight',
         ]
     return ret
 
@@ -148,7 +158,7 @@ class Params:
             n_embd=n_embd,
             n_mult=256,
             n_head=n_embd // 128,
-            n_layer=next(i for i in itertools.count() if f"layers.{i}.attention.wq.weight" not in model),
+            n_layer=next(i for i in itertools.count() if f"layers.encoder.{i}.attention.wq.weight" not in model),
             file_type=file_type,
         )
 
@@ -593,25 +603,27 @@ def permute_lazy(lazy_tensor: LazyTensor, n_head: int) -> LazyTensor:
 
 def convert_transformers_to_orig(model: LazyModel) -> LazyModel:
     out: LazyModel = {}
-    out["tok_embeddings.weight"] = model["model.embed_tokens.weight"]
-    out["norm.weight"] = model["model.norm.weight"]
+    out["tok_embeddings.weight"] = model["model.encoder.embed_tokens.weight"]
+    out["norm.weight"] = model["model.encoder.layer_norm.weight"]
     out["output.weight"] = model["lm_head.weight"]
 
-    n_head = model["model.layers.0.self_attn.q_proj.weight"].shape[1] // 128
+    n_head = model["model.encoder.layers.0.self_attn.q_proj.weight"].shape[1] // 128
+    print("n_head", n_head)
     for i in itertools.count():
-        if f"model.layers.{i}.self_attn.q_proj.weight" not in model:
+        if f"model.encoder.layers.{i}.self_attn.q_proj.weight" not in model:
             break
-        out[f"layers.{i}.attention.wq.weight"] = permute_lazy(model[f"model.layers.{i}.self_attn.q_proj.weight"], n_head)
-        out[f"layers.{i}.attention.wk.weight"] = permute_lazy(model[f"model.layers.{i}.self_attn.k_proj.weight"], n_head)
-        out[f"layers.{i}.attention.wv.weight"] = model[f"model.layers.{i}.self_attn.v_proj.weight"]
-        out[f"layers.{i}.attention.wo.weight"] = model[f"model.layers.{i}.self_attn.o_proj.weight"]
+        out[f"layers.encoder.{i}.attention.wq.weight"] = permute_lazy(model[f"model.encoder.layers.{i}.self_attn.q_proj.weight"], n_head)
+        out[f"layers.encoder.{i}.attention.wk.weight"] = permute_lazy(model[f"model.encoder.layers.{i}.self_attn.k_proj.weight"], n_head)
+        out[f"layers.encoder.{i}.attention.wv.weight"] = model[f"model.encoder.layers.{i}.self_attn.v_proj.weight"]
+        out[f"layers.encoder.{i}.attention.wo.weight"] = model[f"model.encoder.layers.{i}.self_attn.out_proj.weight"]
 
-        out[f"layers.{i}.feed_forward.w1.weight"] = model[f"model.layers.{i}.mlp.gate_proj.weight"]
-        out[f"layers.{i}.feed_forward.w2.weight"] = model[f"model.layers.{i}.mlp.down_proj.weight"]
-        out[f"layers.{i}.feed_forward.w3.weight"] = model[f"model.layers.{i}.mlp.up_proj.weight"]
+        out[f"layers.encoder.{i}.attention_norm.weight"] = model[f"model.encoder.layers.{i}.self_attn_layer_norm.weight"]
 
-        out[f"layers.{i}.attention_norm.weight"] = model[f"model.layers.{i}.input_layernorm.weight"]
-        out[f"layers.{i}.ffn_norm.weight"] = model[f"model.layers.{i}.post_attention_layernorm.weight"]
+        out[f"layers.encoder.{i}.feed_forward.w1.weight"] = model[f"model.encoder.layers.{i}.fc1.weight"]
+        out[f"layers.encoder.{i}.feed_forward.w2.weight"] = model[f"model.encoder.layers.{i}.fc2.weight"]
+        #out[f"layers.encoder.{i}.feed_forward.w3.weight"] = model[f"model.encoder.layers.{i}.mlp.up_proj.weight"]
+
+        out[f"layers.encoder.{i}.ffn_norm.weight"] = model[f"model.encoder.layers.{i}.final_layer_norm.weight"]
     return out
 
 
@@ -975,7 +987,7 @@ class OutputFile:
 
 
 def pick_output_type(model: LazyModel, output_type_str: Optional[str]) -> GGMLFileType:
-    wq_type = model["layers.0.attention.wq.weight"].data_type
+    wq_type = model["layers.encoder.0.attention.wq.weight"].data_type
     if output_type_str == "f32" or (output_type_str is None and wq_type in (DT_F32, DT_BF16)):
         return GGMLFileType.AllF32
     if output_type_str == "f16" or (output_type_str is None and wq_type == DT_F16):
@@ -1155,6 +1167,8 @@ def main(args_in: Optional[List[str]] = None) -> None:
             vocab_dir = args.vocab_dir if args.vocab_dir else model_plus.paths[0].parent
             vocab = load_vocab(vocab_dir)
         model = model_plus.model
+        for k in model.keys():
+            print(k)
         model = do_necessary_conversions(model)
         output_type = pick_output_type(model, args.outtype)
         model = convert_to_output_type(model, output_type)
