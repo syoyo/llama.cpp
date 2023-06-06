@@ -283,16 +283,16 @@ gptneox.o: examples/redpajama/gptneox.cpp ggml.h examples/redpajama/gptneox.h ex
 common-gptneox.o: examples/redpajama/common-gptneox.cpp examples/redpajama/common-gptneox.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-quantize-gptneox: examples/redpajama/quantize-gptneox.cpp ggml.o gptneox.o $(OBJS)
+quantize-gptneox: examples/redpajama/quantize-gptneox.cpp ggml.o ggml-quants-k.o gptneox.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
-redpajama: examples/redpajama/main-redpajama.cpp ggml.o gptneox.o common-gptneox.o $(OBJS)
+redpajama: examples/redpajama/main-redpajama.cpp ggml.o ggml-quants-k.o gptneox.o common-gptneox.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo
 	@echo '====  Run ./redpajama -h for help.  ===='
 	@echo
 
-redpajama-chat: examples/redpajama/main-redpajama-chat.cpp ggml.o gptneox.o common-gptneox.o $(OBJS)
+redpajama-chat: examples/redpajama/main-redpajama-chat.cpp ggml.o ggml-quants-k.o gptneox.o common-gptneox.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo
 	@echo '====  Run ./redpajama-chat -h for help.  ===='
