@@ -289,6 +289,27 @@ save-load-state: examples/save-load-state/save-load-state.cpp build-info.h ggml.
 server: examples/server/server.cpp examples/server/httplib.h examples/server/json.hpp build-info.h ggml.o llama.o common.o $(OBJS)
 	$(CXX) $(CXXFLAGS) -Iexamples/server $(filter-out %.h,$(filter-out %.hpp,$^)) -o $@ $(LDFLAGS)
 
+gptneox.o: examples/redpajama/gptneox.cpp ggml.h examples/redpajama/gptneox.h examples/redpajama/gptneox-util.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+common-gptneox.o: examples/redpajama/common-gptneox.cpp examples/redpajama/common-gptneox.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+quantize-gptneox: examples/redpajama/quantize-gptneox.cpp ggml.o ggml-quants-k.o gptneox.o $(OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+
+redpajama: examples/redpajama/main-redpajama.cpp ggml.o ggml-quants-k.o gptneox.o common-gptneox.o $(OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	@echo
+	@echo '====  Run ./redpajama -h for help.  ===='
+	@echo
+
+redpajama-chat: examples/redpajama/main-redpajama-chat.cpp ggml.o ggml-quants-k.o gptneox.o common-gptneox.o $(OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	@echo
+	@echo '====  Run ./redpajama-chat -h for help.  ===='
+	@echo
+
 build-info.h: $(wildcard .git/index) scripts/build-info.sh
 	@sh scripts/build-info.sh > $@.tmp
 	@if ! cmp -s $@.tmp $@; then \

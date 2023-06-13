@@ -35,6 +35,10 @@ models/*
 /benchmark-matmult
 /vdot
 /Pipfile
+/redpajama-chat
+/redpajama
+/core
+/quantize-gptneox
 /libllama.so
 
 build-info.h
@@ -51,3 +55,4 @@ qnt-*.txt
 perf-*.txt
 
 examples/jeopardy/results.txt
+llama.dot
