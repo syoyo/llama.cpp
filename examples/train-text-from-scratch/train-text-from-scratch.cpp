@@ -3055,6 +3055,10 @@ int main(int argc, char ** argv) {
     llama_params.vocab_only = true;
 
     struct llama_context * lctx = llama_init_from_file(params.fn_vocab_model, llama_params);
+    if (!lctx) {
+        fprintf(stderr, "error: failed to load vocab_model: %s\n", params.fn_vocab_model);
+        return 1;
+    }
 
     struct llama_vocab vocab;
     {
