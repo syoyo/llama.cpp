@@ -22,7 +22,7 @@
 int32_t get_num_physical_cores();
 
 struct gpt_params {
-    int32_t seed                            = -1;  // RNG seed
+    uint32_t seed                           = -1;  // RNG seed
     int32_t n_threads                       = get_num_physical_cores();
     int32_t n_predict                       = -1;  // new tokens to predict
     int32_t n_ctx                           = 512; // context size
@@ -76,6 +76,7 @@ struct gpt_params {
     bool use_mmap          = true;  // use mmap for faster loads
     bool use_mlock         = false; // use mlock to keep model in memory
     bool mem_test          = false; // compute maximum memory usage
+    bool numa              = false; // attempt optimizations that help on some NUMA systems
     bool export_cgraph     = false; // export the computation graph
     bool verbose_prompt    = false; // print prompt tokens before generation
 };

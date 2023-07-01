@@ -1,5 +1,5 @@
 # Define the default target now so that it is always the first target
-BUILD_TARGETS = main quantize quantize-stats perplexity embedding vdot train-text-from-scratch simple
+BUILD_TARGETS = main quantize quantize-stats perplexity embedding vdot train-text-from-scratch simple libembdinput.so embd-input-test
 
 ifdef LLAMA_BUILD_SERVER
 	BUILD_TARGETS += server
@@ -43,8 +43,11 @@ endif
 
 # keep standard at C11 and C++11
 # -Ofast tends to produce faster code, but may not be available for some compilers.
-#OPT = -Ofast
+ifdef LLAMA_FAST
+OPT = -Ofast
+else
 OPT = -O3
+endif
 CFLAGS   = -I.              $(OPT) -std=c11   -fPIC
 CXXFLAGS = -I. -I./examples $(OPT) -std=c++11 -fPIC
 LDFLAGS  =
@@ -131,6 +134,10 @@ ifndef LLAMA_NO_K_QUANTS
 	CFLAGS   += -DGGML_USE_K_QUANTS
 	CXXFLAGS += -DGGML_USE_K_QUANTS
 	OBJS     += k_quants.o
+ifdef LLAMA_QKK_64
+	CFLAGS   += -DGGML_QKK_64
+	CXXFLAGS += -DGGML_QKK_64
+endif
 endif
 
 ifndef LLAMA_NO_ACCELERATE
@@ -265,7 +272,7 @@ libllama.so: llama.o ggml.o $(OBJS)
 	$(CXX) $(CXXFLAGS) -shared -fPIC -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -vf *.o *.so main quantize quantize-stats perplexity embedding benchmark-matmult save-load-state server vdot train-text-from-scratch build-info.h
+	rm -vf *.o *.so main quantize quantize-stats perplexity embedding benchmark-matmult save-load-state server vdot train-text-from-scratch embd-input-test build-info.h
 
 #
 # Examples
@@ -297,6 +304,13 @@ save-load-state: examples/save-load-state/save-load-state.cpp build-info.h ggml.
 
 server: examples/server/server.cpp examples/server/httplib.h examples/server/json.hpp build-info.h ggml.o llama.o common.o $(OBJS)
 	$(CXX) $(CXXFLAGS) -Iexamples/server $(filter-out %.h,$(filter-out %.hpp,$^)) -o $@ $(LDFLAGS)
+
+libembdinput.so: examples/embd-input/embd-input.h examples/embd-input/embd-input-lib.cpp build-info.h ggml.o llama.o common.o $(OBJS)
+	$(CXX) --shared $(CXXFLAGS) $(filter-out %.h,$(filter-out %.hpp,$^)) -o $@ $(LDFLAGS)
+
+
+embd-input-test: libembdinput.so examples/embd-input/embd-input-test.cpp build-info.h ggml.o llama.o common.o $(OBJS)
+	$(CXX) $(CXXFLAGS) $(filter-out %.so,$(filter-out %.h,$(filter-out %.hpp,$^))) -o $@ $(LDFLAGS) -L. -lembdinput
 
 train-text-from-scratch: examples/train-text-from-scratch/train-text-from-scratch.cpp    build-info.h ggml.o llama.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h,$^) -o $@ $(LDFLAGS)
