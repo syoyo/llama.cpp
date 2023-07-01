@@ -50,6 +50,10 @@ Inference of [LLaMA](https://arxiv.org/abs/2302.13971) model in pure C/C++
   </ol>
 </details>
 
+## RedPajama Support
+
+For RedPajama Models, see [this example](https://github.com/togethercomputer/redpajama.cpp/tree/master/examples/redpajama).
+
 ## Description
 
 The main goal of `llama.cpp` is to run the LLaMA model using 4-bit integer quantization on a MacBook

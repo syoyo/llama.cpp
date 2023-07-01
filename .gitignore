@@ -41,6 +41,10 @@ models/*
 /server
 /Pipfile
 /embd-input-test
+/redpajama-chat
+/redpajama
+/core
+/quantize-gptneox
 /libllama.so
 build-info.h
 arm_neon.h
@@ -57,3 +61,4 @@ qnt-*.txt
 perf-*.txt
 
 examples/jeopardy/results.txt
+llama.dot
