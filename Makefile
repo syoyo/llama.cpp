@@ -305,6 +305,13 @@ save-load-state: examples/save-load-state/save-load-state.cpp build-info.h ggml.
 server: examples/server/server.cpp examples/server/httplib.h examples/server/json.hpp build-info.h ggml.o llama.o common.o $(OBJS)
 	$(CXX) $(CXXFLAGS) -Iexamples/server $(filter-out %.h,$(filter-out %.hpp,$^)) -o $@ $(LDFLAGS)
 
+libembdinput.so: examples/embd-input/embd-input.h examples/embd-input/embd-input-lib.cpp build-info.h ggml.o llama.o common.o $(OBJS)
+	$(CXX) --shared $(CXXFLAGS) $(filter-out %.h,$(filter-out %.hpp,$^)) -o $@ $(LDFLAGS)
+
+
+embd-input-test: libembdinput.so examples/embd-input/embd-input-test.cpp build-info.h ggml.o llama.o common.o $(OBJS)
+	$(CXX) $(CXXFLAGS) $(filter-out %.so,$(filter-out %.h,$(filter-out %.hpp,$^))) -o $@ $(LDFLAGS) -L. -lembdinput
+
 gptneox.o: examples/redpajama/gptneox.cpp ggml.h examples/redpajama/gptneox.h examples/redpajama/gptneox-util.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -325,6 +332,7 @@ redpajama-chat: examples/redpajama/main-redpajama-chat.cpp ggml.o ggml-quants-k.
 	@echo
 	@echo '====  Run ./redpajama-chat -h for help.  ===='
 	@echo
+<<<<<<< HEAD
 
 libembdinput.so: examples/embd-input/embd-input.h examples/embd-input/embd-input-lib.cpp build-info.h ggml.o llama.o common.o $(OBJS)
 	$(CXX) --shared $(CXXFLAGS) $(filter-out %.h,$(filter-out %.hpp,$^)) -o $@ $(LDFLAGS)
@@ -332,6 +340,8 @@ libembdinput.so: examples/embd-input/embd-input.h examples/embd-input/embd-input
 
 embd-input-test: libembdinput.so examples/embd-input/embd-input-test.cpp build-info.h ggml.o llama.o common.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $(filter-out %.so,$(filter-out %.h,$(filter-out %.hpp,$^))) -o $@ $(LDFLAGS) -L. -lembdinput
+=======
+>>>>>>> 8009d38f97476003e16a191d7d19f85f6ca02fbf
 
 train-text-from-scratch: examples/train-text-from-scratch/train-text-from-scratch.cpp    build-info.h ggml.o llama.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $(filter-out %.h,$^) -o $@ $(LDFLAGS)
