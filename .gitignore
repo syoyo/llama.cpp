@@ -1,5 +1,6 @@
 *.o
 *.a
+*.so
 .DS_Store
 .build/
 .cache/
@@ -43,8 +44,8 @@ models/*
 /redpajama
 /core
 /quantize-gptneox
+/embd-input-test
 /libllama.so
-
 build-info.h
 arm_neon.h
 compile_commands.json
