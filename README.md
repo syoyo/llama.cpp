@@ -5,12 +5,16 @@
 [![Actions Status](https://github.com/ggerganov/llama.cpp/workflows/CI/badge.svg)](https://github.com/ggerganov/llama.cpp/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+[Roadmap](https://github.com/users/ggerganov/projects/7) / [Manifesto](https://github.com/ggerganov/llama.cpp/discussions/205) / [ggml](https://github.com/ggerganov/ggml)
+
 Inference of [LLaMA](https://arxiv.org/abs/2302.13971) model in pure C/C++
 
 **Hot topics:**
 
+- k-quants now support super-block size of 64: https://github.com/ggerganov/llama.cpp/pull/2001
+- New roadmap: https://github.com/users/ggerganov/projects/7
+- Azure CI brainstorming: https://github.com/ggerganov/llama.cpp/discussions/1985
 - p1 : LLM-based code completion engine at the edge : https://github.com/ggml-org/p1/discussions/1
-- Roadmap June 2023: https://github.com/ggerganov/llama.cpp/discussions/1729
 
 <details>
   <summary>Table of Contents</summary>
@@ -81,6 +85,7 @@ as the main playground for developing new features for the [ggml](https://github
 - [X] [OpenBuddy 🐶 (Multilingual)](https://github.com/OpenBuddy/OpenBuddy)
 - [X] [Pygmalion 7B / Metharme 7B](#using-pygmalion-7b--metharme-7b)
 - [X] [WizardLM](https://github.com/nlpxucan/WizardLM)
+- [X] [Baichuan-7B](https://huggingface.co/baichuan-inc/baichuan-7B)
 
 **Bindings:**
 
@@ -89,6 +94,7 @@ as the main playground for developing new features for the [ggml](https://github
 - Node.js: [hlhr202/llama-node](https://github.com/hlhr202/llama-node)
 - Ruby: [yoshoku/llama_cpp.rb](https://github.com/yoshoku/llama_cpp.rb)
 - C#/.NET: [SciSharp/LLamaSharp](https://github.com/SciSharp/LLamaSharp)
+- Scala 3: [donderom/llm4s](https://github.com/donderom/llm4s)
 
 **UI:**
 
@@ -682,6 +688,8 @@ GGML_OPENCL_PLATFORM=0
 GGML_OPENCL_DEVICE=0
 export LD_LIBRARY_PATH=/vendor/lib64:$LD_LIBRARY_PATH
 ```
+
+(Note: some Android devices, like the Zenfone 8, need the following command instead - "export LD_LIBRARY_PATH=/system/vendor/lib64:$LD_LIBRARY_PATH". Source: https://www.reddit.com/r/termux/comments/kc3ynp/opencl_working_in_termux_more_in_comments/ )
 
 For easy and swift re-execution, consider documenting this final part in a .sh script file. This will enable you to rerun the process with minimal hassle.
 
