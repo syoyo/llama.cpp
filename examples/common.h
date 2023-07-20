@@ -9,6 +9,7 @@
 #include <random>
 #include <thread>
 #include <unordered_map>
+#include <tuple>
 
 #if !defined (_WIN32)
 #include <stdio.h>
@@ -21,16 +22,19 @@
 int32_t get_num_physical_cores();
 
 struct gpt_params {
-    int32_t seed                            = -1;  // RNG seed
+    uint32_t seed                           = -1;  // RNG seed
     int32_t n_threads                       = get_num_physical_cores();
     int32_t n_predict                       = -1;  // new tokens to predict
     int32_t n_ctx                           = 512; // context size
     int32_t n_batch                         = 512; // batch size for prompt processing (must be >=32 to use BLAS)
     int32_t n_keep                          = 0;   // number of tokens to keep from initial prompt
+    int32_t n_chunks                        = -1;  // max number of chunks to process (-1 = unlimited)
     int32_t n_gpu_layers                    = 0;   // number of layers to store in VRAM
     int32_t main_gpu                        = 0;   // the GPU that is used for scratch and small tensors
     float   tensor_split[LLAMA_MAX_DEVICES] = {0}; // how split tensors should be distributed across GPUs
-    bool    low_vram                        = 0;   // if true, reduce VRAM usage at the cost of performance
+    int32_t n_probs                         = 0;   // if greater than 0, output the probabilities of top n_probs tokens.
+    float   rope_freq_base                  = 10000.0f; // RoPE base frequency
+    float   rope_freq_scale                 = 1.0f;     // RoPE frequency scaling factor
 
     // sampling parameters
     std::unordered_map<llama_token, float> logit_bias; // logit bias for specific tokens
@@ -47,6 +51,12 @@ struct gpt_params {
     float   mirostat_tau      = 5.00f; // target entropy
     float   mirostat_eta      = 0.10f; // learning rate
 
+    // Classifier-Free Guidance
+    // https://arxiv.org/abs/2306.17806
+    std::string cfg_negative_prompt;       // string to help guidance
+    float       cfg_scale         = 1.f;   // How strong is guidance
+    float       cfg_smooth_factor = 1.f;   // Smooth factor between old and new logits
+
     std::string model             = "models/7B/ggml-model.bin"; // model path
     std::string model_alias       = "unknown"; // model alias
     std::string prompt            = "";
@@ -58,6 +68,7 @@ struct gpt_params {
     std::string lora_adapter = "";  // lora adapter path
     std::string lora_base    = "";  // base model path for the lora adapter
 
+    bool low_vram          = false;   // if true, reduce VRAM usage at the cost of performance
     bool memory_f16        = true;  // use f16 instead of f32 for memory kv
     bool random_prompt     = false; // do not randomize prompt if none provided
     bool use_color         = false; // use color to distinguish generations and inputs
@@ -75,6 +86,7 @@ struct gpt_params {
     bool use_mmap          = true;  // use mmap for faster loads
     bool use_mlock         = false; // use mlock to keep model in memory
     bool mem_test          = false; // compute maximum memory usage
+    bool numa              = false; // attempt optimizations that help on some NUMA systems
     bool export_cgraph     = false; // export the computation graph
     bool verbose_prompt    = false; // print prompt tokens before generation
 };
@@ -95,7 +107,8 @@ std::vector<llama_token> llama_tokenize(struct llama_context * ctx, const std::s
 // Model utils
 //
 
-struct llama_context * llama_init_from_gpt_params(const gpt_params & params);
+std::tuple<struct llama_model *, struct llama_context *> llama_init_from_gpt_params(const gpt_params & params);
+struct llama_context_params llama_context_params_from_gpt_params(const gpt_params & params);
 
 //
 // Console utils
