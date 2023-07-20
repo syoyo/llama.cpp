@@ -3046,7 +3046,15 @@ int main(int argc, char ** argv) {
     llama_params.vocab_only = true;
 
     struct llama_model * lmodel = llama_load_model_from_file(params.fn_vocab_model, llama_params);
+    if (!lmodel) {
+        fprintf(stderr, "error: failed to load vocab_model: %s\n", params.fn_vocab_model);
+        return 1;
+    }
     struct llama_context * lctx = llama_new_context_with_model(lmodel, llama_params);
+    if (!lctx) {
+        fprintf(stderr, "error: failed to create context from vocab_model: %s\n", params.fn_vocab_model);
+        return 1;
+    }
 
     struct llama_vocab vocab;
     {
