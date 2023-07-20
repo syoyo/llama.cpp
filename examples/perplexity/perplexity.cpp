@@ -5,6 +5,10 @@
 #include <cmath>
 #include <ctime>
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4244 4267) // possible loss of data
+#endif
+
 std::vector<float> softmax(const std::vector<float>& logits) {
     std::vector<float> probs(logits.size());
     float max_logit = logits[0];
@@ -28,13 +32,15 @@ void perplexity(llama_context * ctx, const gpt_params & params) {
     // BOS tokens will be added for each chunk before eval
     auto tokens = ::llama_tokenize(ctx, params.prompt, true);
 
-    int count   = 0;
+    const int n_chunk_max = tokens.size() / params.n_ctx;
 
-    const int n_chunk = tokens.size() / params.n_ctx;
+    const int n_chunk = params.n_chunks < 0 ? n_chunk_max : std::min(params.n_chunks, n_chunk_max);
     const int n_vocab = llama_n_vocab(ctx);
     const int n_batch = params.n_batch;
 
+    int count = 0;
     double nll = 0.0;
+
     fprintf(stderr, "%s: calculating perplexity over %d chunks, batch_size=%d\n", __func__, n_chunk, n_batch);
 
     for (int i = 0; i < n_chunk; ++i) {
@@ -126,30 +132,31 @@ int main(int argc, char ** argv) {
     params.n_batch = std::min(params.n_batch, params.n_ctx);
 
     if (params.n_ctx > 2048) {
-        fprintf(stderr, "%s: warning: model does not support context sizes greater than 2048 tokens (%d specified);"
+        fprintf(stderr, "%s: warning: model might not support context sizes greater than 2048 tokens (%d specified);"
                 "expect poor results\n", __func__, params.n_ctx);
     }
 
     fprintf(stderr, "%s: build = %d (%s)\n", __func__, BUILD_NUMBER, BUILD_COMMIT);
 
-    if (params.seed < 0) {
+    if (params.seed == LLAMA_DEFAULT_SEED) {
         params.seed = time(NULL);
     }
 
-    fprintf(stderr, "%s: seed  = %d\n", __func__, params.seed);
+    fprintf(stderr, "%s: seed  = %u\n", __func__, params.seed);
 
     std::mt19937 rng(params.seed);
     if (params.random_prompt) {
         params.prompt = gpt_random_prompt(rng);
     }
 
-    llama_init_backend();
+    llama_backend_init(params.numa);
 
+    llama_model * model;
     llama_context * ctx;
 
     // load the model and apply lora adapter, if any
-    ctx = llama_init_from_gpt_params(params);
-    if (ctx == NULL) {
+    std::tie(model, ctx) = llama_init_from_gpt_params(params);
+    if (model == NULL) {
         fprintf(stderr, "%s: error: unable to load model\n", __func__);
         return 1;
     }
@@ -165,6 +172,9 @@ int main(int argc, char ** argv) {
 
     llama_print_timings(ctx);
     llama_free(ctx);
+    llama_free_model(model);
+
+    llama_backend_free();
 
     return 0;
 }
