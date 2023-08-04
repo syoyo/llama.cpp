@@ -44,11 +44,11 @@ models-mnt
 /vdot
 /server
 /Pipfile
-/embd-input-test
 /redpajama-chat
 /redpajama
 /core
 /quantize-gptneox
+/embd-input-test
 /libllama.so
 build-info.h
 arm_neon.h

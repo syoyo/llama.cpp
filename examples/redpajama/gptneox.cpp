@@ -1127,7 +1127,7 @@ static bool gptneox_eval_internal(
     // for big prompts, if BLAS is enabled, it is better to use only one thread
     // otherwise, the threads are spin-lock waiting for the BLAS calls and are degrading the performance
     ggml_cgraph gf = {};
-    gf.n_threads = N >= 32 && ggml_cpu_has_blas() && !ggml_cpu_has_cublas() ? 1 : n_threads;
+    //gf.n_threads = N >= 32 && ggml_cpu_has_blas() && !ggml_cpu_has_cublas() ? 1 : n_threads;
 
     struct ggml_tensor * embd = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, N);
     memcpy(embd->data, tokens, N*ggml_element_size(embd));
@@ -1202,8 +1202,8 @@ static bool gptneox_eval_internal(
             // MARK: gptneox RoPE Q and K, before cache
             // Bit 2 for gptneox style (2)
             // Bit 1 is zero for dont skip n_past +(0), use (2+1) = (3) if rope is applied to cache of k (after cache only)
-            Qcur = ggml_rope(ctx0, Qcur, n_past, n_rot, 2);
-            Kcur = ggml_rope(ctx0, Kcur, n_past, n_rot, 2); //3);
+            Qcur = ggml_rope(ctx0, Qcur, n_past, n_rot, 2, /* n_ctx */0);
+            Kcur = ggml_rope(ctx0, Kcur, n_past, n_rot, 2, /* n_ctx */0); //3);
 
             // store key and value to memory, not required if prompt if only a single token (not practical or likely)
             //if (N >= 1) {
@@ -1403,7 +1403,18 @@ static bool gptneox_eval_internal(
 
     // run the computation
     ggml_build_forward_expand(&gf, inpL);
+
+#if 0
     ggml_graph_compute       (ctx0, &gf);
+#else
+    struct ggml_cplan plan = ggml_graph_plan(&gf, n_threads);
+    std::vector<uint8_t> work_buf;
+    if (plan.work_size > 0) {
+      work_buf.resize(plan.work_size);
+      plan.work_data = work_buf.data();
+    }
+    ggml_graph_compute       (&gf, &plan);
+#endif
 
 #ifdef GGML_PERF
     // print timing information per ggml operation (for debugging purposes)
@@ -2524,8 +2535,15 @@ int gptneox_apply_lora_from_file_internal(struct gptneox_context * ctx, const ch
             }
 
             struct ggml_cgraph gf = ggml_build_forward(r);
-            gf.n_threads = n_threads;
-            ggml_graph_compute(lora_ctx, &gf);
+            //gf.n_threads = n_threads;
+            struct ggml_cplan plan = ggml_graph_plan(&gf, n_threads);
+            std::vector<uint8_t> work_buf;
+            if (plan.work_size > 0) {
+              work_buf.resize(plan.work_size);
+              plan.work_data = work_buf.data();
+            }
+            //ggml_graph_compute(lora_ctx, &gf);
+            ggml_graph_compute(&gf, &plan);
 
             // we won't need these tensors again, reset the context to save memory
             ggml_free(lora_ctx);
