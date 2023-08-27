@@ -14,103 +14,27 @@ struct quant_option {
 };
 
 static const std::vector<struct quant_option> QUANT_OPTIONS = {
-    {
-        "Q4_0",
-        LLAMA_FTYPE_MOSTLY_Q4_0,
-        " 3.50G, +0.2499 ppl @ 7B - small, very high quality loss - legacy, prefer using Q3_K_M",
-    },
-    {
-        "Q4_1",
-        LLAMA_FTYPE_MOSTLY_Q4_1,
-        " 3.90G, +0.1846 ppl @ 7B - small, substantial quality loss - legacy, prefer using Q3_K_L",
-    },
-    {
-        "Q5_0",
-        LLAMA_FTYPE_MOSTLY_Q5_0,
-        " 4.30G, +0.0796 ppl @ 7B - medium, balanced quality - legacy, prefer using Q4_K_M",
-    },
-    {
-        "Q5_1",
-        LLAMA_FTYPE_MOSTLY_Q5_1,
-        " 4.70G, +0.0415 ppl @ 7B - medium, low quality loss - legacy, prefer using Q5_K_M",
-    },
+    { "Q4_0",   LLAMA_FTYPE_MOSTLY_Q4_0,   " 3.56G, +0.2166 ppl @ LLaMA-v1-7B", },
+    { "Q4_1",   LLAMA_FTYPE_MOSTLY_Q4_1,   " 3.90G, +0.1585 ppl @ LLaMA-v1-7B", },
+    { "Q5_0",   LLAMA_FTYPE_MOSTLY_Q5_0,   " 4.33G, +0.0683 ppl @ LLaMA-v1-7B", },
+    { "Q5_1",   LLAMA_FTYPE_MOSTLY_Q5_1,   " 4.70G, +0.0349 ppl @ LLaMA-v1-7B", },
 #ifdef GGML_USE_K_QUANTS
-    {
-        "Q2_K",
-        LLAMA_FTYPE_MOSTLY_Q2_K,
-        " 2.67G, +0.8698 ppl @ 7B - smallest, extreme quality loss - not recommended",
-    },
-    {
-        "Q3_K",
-        LLAMA_FTYPE_MOSTLY_Q3_K_M,
-        "alias for Q3_K_M"
-    },
-    {
-        "Q3_K_S",
-        LLAMA_FTYPE_MOSTLY_Q3_K_S,
-        " 2.75G, +0.5505 ppl @ 7B - very small, very high quality loss",
-    },
-    {
-        "Q3_K_M",
-        LLAMA_FTYPE_MOSTLY_Q3_K_M,
-        " 3.06G, +0.2437 ppl @ 7B - very small, very high quality loss",
-    },
-    {
-        "Q3_K_L",
-        LLAMA_FTYPE_MOSTLY_Q3_K_L,
-        " 3.35G, +0.1803 ppl @ 7B - small, substantial quality loss",
-    },
-    {
-        "Q4_K",
-        LLAMA_FTYPE_MOSTLY_Q4_K_M,
-        "alias for Q4_K_M",
-    },
-    {
-        "Q4_K_S",
-        LLAMA_FTYPE_MOSTLY_Q4_K_S,
-        " 3.56G, +0.1149 ppl @ 7B - small, significant quality loss",
-    },
-    {
-        "Q4_K_M",
-        LLAMA_FTYPE_MOSTLY_Q4_K_M,
-        " 3.80G, +0.0535 ppl @ 7B - medium, balanced quality - *recommended*",
-    },
-    {
-        "Q5_K",
-        LLAMA_FTYPE_MOSTLY_Q5_K_M,
-        "alias for Q5_K_M",
-    },
-    {
-        "Q5_K_S",
-        LLAMA_FTYPE_MOSTLY_Q5_K_S,
-        " 4.33G, +0.0353 ppl @ 7B - large, low quality loss - *recommended*",
-    },
-    {
-        "Q5_K_M",
-        LLAMA_FTYPE_MOSTLY_Q5_K_M,
-        " 4.45G, +0.0142 ppl @ 7B - large, very low quality loss - *recommended*",
-    },
-    {
-        "Q6_K",
-        LLAMA_FTYPE_MOSTLY_Q6_K,
-        " 5.15G, +0.0044 ppl @ 7B - very large, extremely low quality loss",
-    },
+    { "Q2_K",   LLAMA_FTYPE_MOSTLY_Q2_K,   " 2.63G, +0.6717 ppl @ LLaMA-v1-7B", },
+    { "Q3_K",   LLAMA_FTYPE_MOSTLY_Q3_K_M, "alias for Q3_K_M" },
+    { "Q3_K_S", LLAMA_FTYPE_MOSTLY_Q3_K_S, " 2.75G, +0.5551 ppl @ LLaMA-v1-7B", },
+    { "Q3_K_M", LLAMA_FTYPE_MOSTLY_Q3_K_M, " 3.07G, +0.2496 ppl @ LLaMA-v1-7B", },
+    { "Q3_K_L", LLAMA_FTYPE_MOSTLY_Q3_K_L, " 3.35G, +0.1764 ppl @ LLaMA-v1-7B", },
+    { "Q4_K",   LLAMA_FTYPE_MOSTLY_Q4_K_M, "alias for Q4_K_M", },
+    { "Q4_K_S", LLAMA_FTYPE_MOSTLY_Q4_K_S, " 3.59G, +0.0992 ppl @ LLaMA-v1-7B", },
+    { "Q4_K_M", LLAMA_FTYPE_MOSTLY_Q4_K_M, " 3.80G, +0.0532 ppl @ LLaMA-v1-7B", },
+    { "Q5_K",   LLAMA_FTYPE_MOSTLY_Q5_K_M, "alias for Q5_K_M", },
+    { "Q5_K_S", LLAMA_FTYPE_MOSTLY_Q5_K_S, " 4.33G, +0.0400 ppl @ LLaMA-v1-7B", },
+    { "Q5_K_M", LLAMA_FTYPE_MOSTLY_Q5_K_M, " 4.45G, +0.0122 ppl @ LLaMA-v1-7B", },
+    { "Q6_K",   LLAMA_FTYPE_MOSTLY_Q6_K,   " 5.15G, -0.0008 ppl @ LLaMA-v1-7B", },
 #endif
-    {
-        "Q8_0",
-        LLAMA_FTYPE_MOSTLY_Q8_0,
-        " 6.70G, +0.0004 ppl @ 7B - very large, extremely low quality loss - not recommended",
-    },
-    {
-        "F16",
-        LLAMA_FTYPE_MOSTLY_F16,
-        "13.00G              @ 7B - extremely large, virtually no quality loss - not recommended",
-    },
-    {
-        "F32",
-        LLAMA_FTYPE_ALL_F32,
-        "26.00G              @ 7B - absolutely huge, lossless - not recommended",
-    },
+    { "Q8_0",   LLAMA_FTYPE_MOSTLY_Q8_0,   " 6.70G, +0.0004 ppl @ LLaMA-v1-7B", },
+    { "F16",    LLAMA_FTYPE_MOSTLY_F16,    "13.00G              @ 7B", },
+    { "F32",    LLAMA_FTYPE_ALL_F32,       "26.00G              @ 7B", },
 };
 
 
@@ -144,10 +68,10 @@ bool try_parse_ftype(const std::string & ftype_str_in, llama_ftype & ftype, std:
 }
 
 // usage:
-//  ./quantize [--allow-requantize] [--leave-output-tensor] models/llama/ggml-model.bin [models/llama/ggml-model-quant.bin] type [nthreads]
+//  ./quantize [--allow-requantize] [--leave-output-tensor] models/llama/ggml-model.gguf [models/llama/ggml-model-quant.gguf] type [nthreads]
 //
 void usage(const char * executable) {
-    fprintf(stderr, "usage: %s [--help] [--allow-requantize] [--leave-output-tensor] model-f32.bin [model-quant.bin] type [nthreads]\n\n", executable);
+    fprintf(stderr, "usage: %s [--help] [--allow-requantize] [--leave-output-tensor] model-f32.gguf [model-quant.gguf] type [nthreads]\n\n", executable);
     fprintf(stderr, "  --allow-requantize: Allows requantizing tensors that have already been quantized. Warning: This can severely reduce quality compared to quantizing from 16bit or 32bit\n");
     fprintf(stderr, "  --leave-output-tensor: Will leave output.weight un(re)quantized. Increases model size but may also increase quality, especially when requantizing\n");
     fprintf(stderr, "\nAllowed quantization types:\n");
@@ -180,7 +104,7 @@ int main(int argc, char ** argv) {
         usage(argv[0]);
     }
 
-    llama_init_backend();
+    llama_backend_init(false);
 
     // parse command line arguments
     const std::string fname_inp = argv[arg_idx];
@@ -194,8 +118,8 @@ int main(int argc, char ** argv) {
         if (pos != std::string::npos) {
             fpath = fname_inp.substr(0, pos + 1);
         }
-        // export as [inp path]/ggml-model-[ftype].bin
-        fname_out = fpath + "ggml-model-" + ftype_str + ".bin";
+        // export as [inp path]/ggml-model-[ftype].gguf
+        fname_out = fpath + "ggml-model-" + ftype_str + ".gguf";
         arg_idx++;
     }
     else {
@@ -256,6 +180,8 @@ int main(int argc, char ** argv) {
         printf("%s: quantize time = %8.2f ms\n", __func__, t_quantize_us/1000.0);
         printf("%s:    total time = %8.2f ms\n", __func__, (t_main_end_us - t_main_start_us)/1000.0);
     }
+
+    llama_backend_free();
 
     return 0;
 }
