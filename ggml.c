@@ -157,12 +157,6 @@ typedef void * thread_ret_t;
 //#define GGML_SOFT_MAX_ACCELERATE
 #endif
 
-#if UINTPTR_MAX == 0xFFFFFFFF
-    #define GGML_MEM_ALIGN 4
-#else
-    #define GGML_MEM_ALIGN 16
-#endif
-
 //
 // logging
 //
@@ -2436,7 +2430,6 @@ static void ggml_vec_dot_q4_0_q8_0(const int n, float * restrict s, const void *
     const int nb = n / qk;
 
     assert(n % qk == 0);
-    assert(nb % 2 == 0);
 
     const block_q4_0 * restrict x = vx;
     const block_q8_0 * restrict y = vy;
@@ -2445,6 +2438,7 @@ static void ggml_vec_dot_q4_0_q8_0(const int n, float * restrict s, const void *
     float32x4_t sumv0 = vdupq_n_f32(0.0f);
     float32x4_t sumv1 = vdupq_n_f32(0.0f);
 
+    GGML_ASSERT(nb % 2 == 0); // TODO: handle odd nb
     for (int i = 0; i < nb; i += 2) {
         const block_q4_0 * restrict x0 = &x[i + 0];
         const block_q4_0 * restrict x1 = &x[i + 1];
@@ -2623,6 +2617,7 @@ static void ggml_vec_dot_q4_0_q8_0(const int n, float * restrict s, const void *
     }
 
     // Main loop
+    GGML_ASSERT(nb % 2 == 0); // TODO: handle odd nb
     for (int i = 2; i < nb; i+=2) {
         _mm_prefetch(&x[i] + sizeof(block_q4_0), _MM_HINT_T0);
         _mm_prefetch(&y[i] + sizeof(block_q8_0), _MM_HINT_T0);
@@ -2706,7 +2701,6 @@ static void ggml_vec_dot_q4_1_q8_1(const int n, float * restrict s, const void *
     const int nb = n / qk;
 
     assert(n % qk == 0);
-    assert(nb % 2 == 0);
 
     const block_q4_1 * restrict x = vx;
     const block_q8_1 * restrict y = vy;
@@ -2718,6 +2712,7 @@ static void ggml_vec_dot_q4_1_q8_1(const int n, float * restrict s, const void *
 
     float summs = 0;
 
+    GGML_ASSERT(nb % 2 == 0); // TODO: handle odd nb
     for (int i = 0; i < nb; i += 2) {
         const block_q4_1 * restrict x0 = &x[i + 0];
         const block_q4_1 * restrict x1 = &x[i + 1];
@@ -2832,7 +2827,6 @@ static void ggml_vec_dot_q5_0_q8_0(const int n, float * restrict s, const void *
     const int nb = n / qk;
 
     assert(n % qk == 0);
-    assert(nb % 2 == 0);
     assert(qk == QK5_0);
 
     const block_q5_0 * restrict x = vx;
@@ -2848,6 +2842,7 @@ static void ggml_vec_dot_q5_0_q8_0(const int n, float * restrict s, const void *
     uint64_t tmp0[4];
     uint64_t tmp1[4];
 
+    GGML_ASSERT(nb % 2 == 0); // TODO: handle odd nb
     for (int i = 0; i < nb; i += 2) {
         const block_q5_0 * restrict x0 = &x[i];
         const block_q5_0 * restrict x1 = &x[i + 1];
@@ -3072,7 +3067,6 @@ static void ggml_vec_dot_q5_1_q8_1(const int n, float * restrict s, const void *
     const int nb = n / qk;
 
     assert(n % qk == 0);
-    assert(nb % 2 == 0);
     assert(qk == QK5_1);
 
     const block_q5_1 * restrict x = vx;
@@ -3091,6 +3085,7 @@ static void ggml_vec_dot_q5_1_q8_1(const int n, float * restrict s, const void *
     uint64_t tmp0[4];
     uint64_t tmp1[4];
 
+    GGML_ASSERT(nb % 2 == 0); // TODO: handle odd nb
     for (int i = 0; i < nb; i += 2) {
         const block_q5_1 * restrict x0 = &x[i];
         const block_q5_1 * restrict x1 = &x[i + 1];
@@ -3328,7 +3323,6 @@ static void ggml_vec_dot_q8_0_q8_0(const int n, float * restrict s, const void *
     const int nb = n / qk;
 
     assert(n % qk == 0);
-    assert(nb % 2 == 0);
 
     const block_q8_0 * restrict x = vx;
     const block_q8_0 * restrict y = vy;
@@ -3337,6 +3331,7 @@ static void ggml_vec_dot_q8_0_q8_0(const int n, float * restrict s, const void *
     float32x4_t sumv0 = vdupq_n_f32(0.0f);
     float32x4_t sumv1 = vdupq_n_f32(0.0f);
 
+    GGML_ASSERT(nb % 2 == 0); // TODO: handle odd nb
     for (int i = 0; i < nb; i += 2) {
         const block_q8_0 * restrict x0 = &x[i + 0];
         const block_q8_0 * restrict x1 = &x[i + 1];
@@ -7097,11 +7092,13 @@ struct ggml_tensor * ggml_conv_transpose_2d_p0(
     };
 
     struct ggml_tensor* result = ggml_new_tensor(ctx, GGML_TYPE_F32, 4, ne);
+
+    ggml_set_op_params_i32(result, 0, stride);
+
     result->op = GGML_OP_CONV_TRANSPOSE_2D;
     result->grad = is_node ? ggml_dup_tensor(ctx, result) : NULL;
     result->src[0] = a;
     result->src[1] = b;
-    result->src[2] = ggml_new_i32(ctx, stride);
 
     return result;
 }
@@ -13497,7 +13494,6 @@ static void ggml_compute_forward_conv_transpose_2d(
         const struct ggml_compute_params * params,
         const struct ggml_tensor * src0,
         const struct ggml_tensor * src1,
-        const struct ggml_tensor * opt0,
               struct ggml_tensor * dst) {
     GGML_ASSERT(src0->type == GGML_TYPE_F16);
     GGML_ASSERT(src1->type == GGML_TYPE_F32);
@@ -13557,7 +13553,7 @@ static void ggml_compute_forward_conv_transpose_2d(
         return;
     }
 
-    const int32_t stride = ((const int32_t*)(opt0->data))[0];
+    const int32_t stride = ggml_get_op_params_i32(dst, 0);
 
     // total patches in dst
     const int np = ne2;
@@ -13570,7 +13566,7 @@ static void ggml_compute_forward_conv_transpose_2d(
     const int ip1 = MIN(ip0 + dp, np);
 
     ggml_fp16_t * const wdata = (ggml_fp16_t *) params->wdata + 0;
-    ggml_fp16_t * const wdata_src = (ggml_fp16_t *) params->wdata + nk;
+    ggml_fp16_t * const wdata_src = wdata + nk;
 
     for (int i2 = ip0; i2 < ip1; i2++) { // Cout
         float * dst_data = (float *)((char *) dst->data + i2*nb2);
@@ -13582,9 +13578,8 @@ static void ggml_compute_forward_conv_transpose_2d(
                     for (int i00 = 0; i00 < ne00; i00++) {
                         float v = 0;
                         ggml_vec_dot_f16(ne03, &v,
-                                (ggml_fp16_t *) wdata_src + i1n,
-                                (ggml_fp16_t *) wdata_kernel + i01*ne00*ne03 + i00*ne03);
-
+                                wdata_src + i1n,
+                                wdata_kernel + i01*ne00*ne03 + i00*ne03);
                         dst_data[(i11*stride + i01)*ne0 + i10*stride + i00] += v;
                     }
                 }
@@ -15731,7 +15726,7 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             } break;
         case GGML_OP_CONV_TRANSPOSE_2D:
             {
-                ggml_compute_forward_conv_transpose_2d(params, tensor->src[0], tensor->src[1], tensor->src[2], tensor);
+                ggml_compute_forward_conv_transpose_2d(params, tensor->src[0], tensor->src[1], tensor);
             } break;
         case GGML_OP_POOL_1D:
             {
@@ -19524,8 +19519,8 @@ static bool gguf_fread_str_v1(FILE * file, struct gguf_str * p, size_t * offset)
     bool ok = true;
 
     uint32_t n = 0;
-    ok = ok && gguf_fread_el(file, &n,       sizeof(n),   offset); p->data = calloc(n + 1, 1); p->n = n;
-    ok = ok && gguf_fread_el(file,  p->data, p->n,         offset);
+    ok = ok && gguf_fread_el(file, &n,       sizeof(n), offset); p->data = calloc(n + 1, 1); p->n = n;
+    ok = ok && gguf_fread_el(file,  p->data, p->n,      offset);
 
     return ok;
 }
@@ -20071,7 +20066,7 @@ static int gguf_get_or_add_key(struct gguf_context * ctx, const char * key) {
     const int n_kv = gguf_get_n_kv(ctx);
 
     ctx->kv = realloc(ctx->kv, (n_kv + 1) * sizeof(struct gguf_kv));
-    ctx->kv[n_kv].key.n    = strlen(key) + 1;
+    ctx->kv[n_kv].key.n    = strlen(key);
     ctx->kv[n_kv].key.data = strdup(key);
     ctx->header.n_kv++;
 
@@ -20159,7 +20154,7 @@ void gguf_set_val_str(struct gguf_context * ctx, const char * key, const char * 
     const int idx = gguf_get_or_add_key(ctx, key);
 
     ctx->kv[idx].type           = GGUF_TYPE_STRING;
-    ctx->kv[idx].value.str.n    = strlen(val) + 1;
+    ctx->kv[idx].value.str.n    = strlen(val);
     ctx->kv[idx].value.str.data = strdup(val);
 }
 
@@ -20182,7 +20177,7 @@ void gguf_set_arr_str(struct gguf_context * ctx, const char * key, const char **
     ctx->kv[idx].value.arr.data = malloc(n*sizeof(struct gguf_str));
     for (int i = 0; i < n; i++) {
         struct gguf_str * str = &((struct gguf_str *)ctx->kv[idx].value.arr.data)[i];
-        str->n    = strlen(data[i]) + 1;
+        str->n    = strlen(data[i]);
         str->data = strdup(data[i]);
     }
 }
@@ -20229,7 +20224,7 @@ void gguf_add_tensor(
     const int idx = ctx->header.n_tensors;
     ctx->infos = realloc(ctx->infos, (idx + 1)*sizeof(struct gguf_tensor_info));
 
-    ctx->infos[idx].name.n    = strlen(tensor->name) + 1;
+    ctx->infos[idx].name.n    = strlen(tensor->name);
     ctx->infos[idx].name.data = strdup(tensor->name);
 
     for (int i = 0; i < GGML_MAX_DIMS; ++i) {
