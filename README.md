@@ -107,17 +107,20 @@ as the main playground for developing new features for the [ggml](https://github
 
 - Python: [abetlen/llama-cpp-python](https://github.com/abetlen/llama-cpp-python)
 - Go: [go-skynet/go-llama.cpp](https://github.com/go-skynet/go-llama.cpp)
-- Node.js: [hlhr202/llama-node](https://github.com/hlhr202/llama-node)
+- Node.js: [withcatai/node-llama-cpp](https://github.com/withcatai/node-llama-cpp), [hlhr202/llama-node](https://github.com/hlhr202/llama-node)
 - Ruby: [yoshoku/llama_cpp.rb](https://github.com/yoshoku/llama_cpp.rb)
 - Rust: [mdrokz/rust-llama.cpp](https://github.com/mdrokz/rust-llama.cpp)
 - C#/.NET: [SciSharp/LLamaSharp](https://github.com/SciSharp/LLamaSharp)
 - Scala 3: [donderom/llm4s](https://github.com/donderom/llm4s)
 - Clojure: [phronmophobic/llama.clj](https://github.com/phronmophobic/llama.clj)
+- React Native: [mybigday/llama.rn](https://github.com/mybigday/llama.rn)
+- Java: [kherud/java-llama.cpp](https://github.com/kherud/java-llama.cpp)
 
 **UI:**
 
 - [nat/openplayground](https://github.com/nat/openplayground)
 - [oobabooga/text-generation-webui](https://github.com/oobabooga/text-generation-webui)
+- [withcatai/catai](https://github.com/withcatai/catai)
 
 ---
 
@@ -277,29 +280,11 @@ In order to build llama.cpp you have three different options.
 
 ### Metal Build
 
-Using Metal allows the computation to be executed on the GPU for Apple devices:
+On MacOS, Metal is enabled by default. Using Metal makes the computation run on the GPU.
+To disable the Metal build at compile time use the `LLAMA_NO_METAL=1` flag or the `LLAMA_METAL=OFF` cmake option.
 
-- Using `make`:
-
-  ```bash
-  LLAMA_METAL=1 make
-  ```
-
-- Using `CMake`:
-
-    ```bash
-    mkdir build-metal
-    cd build-metal
-    cmake -DLLAMA_METAL=ON ..
-    cmake --build . --config Release
-    ```
-
-When built with Metal support, you can enable GPU inference with the `--gpu-layers|-ngl` command-line argument.
-Any value larger than 0 will offload the computation to the GPU. For example:
-
-```bash
-./main -m ./models/7B/ggml-model-q4_0.gguf -n 128 -ngl 1
-```
+When built with Metal support, you can explicitly disable GPU inference with the `--gpu-layers|-ngl 0` command-line
+argument.
 
 ### MPI Build
 
@@ -462,6 +447,8 @@ Building the program with BLAS support may lead to some performance improvements
   You will need the [OpenCL SDK](https://github.com/KhronosGroup/OpenCL-SDK).
     - For Ubuntu or Debian, the packages `opencl-headers`, `ocl-icd` may be needed.
 
+    - For Windows, a pre-built SDK is available on the [OpenCL Releases](https://github.com/KhronosGroup/OpenCL-SDK/releases) page.
+
     - <details>
         <summary>Installing the OpenCL SDK from source</summary>
 
@@ -479,10 +466,27 @@ Building the program with BLAS support may lead to some performance improvements
         ```
       </details>
 
-  Installing CLBlast: it may be found in your operating system's packages.
+  ##### Installing CLBlast
+
+  Pre-built CLBlast binaries may be found on the [CLBlast Releases](https://github.com/CNugteren/CLBlast/releases) page. For Unix variants, it may also be found in your operating system's packages.
+
+  Alternatively, they may be built from source.
 
   - <details>
-    <summary>If not, then installing from source:</summary>
+    <summary>Windows:</summary>
+
+      ```cmd
+      set OPENCL_SDK_ROOT="C:/OpenCL-SDK-v2023.04.17-Win-x64"
+      git clone https://github.com/CNugteren/CLBlast.git
+      mkdir CLBlast\build
+      cd CLBlast\build
+      cmake .. -DBUILD_SHARED_LIBS=OFF -DOVERRIDE_MSVC_FLAGS_TO_MT=OFF -DTUNERS=OFF -DOPENCL_ROOT=%OPENCL_SDK_ROOT% -G "Visual Studio 17 2022" -A x64
+      cmake --build . --config Release
+      cmake --install . --prefix C:/CLBlast
+      ```
+
+  - <details>
+    <summary>Unix:</summary>
 
       ```sh
       git clone https://github.com/CNugteren/CLBlast.git
@@ -496,21 +500,32 @@ Building the program with BLAS support may lead to some performance improvements
       Where `/some/path` is where the built library will be installed (default is `/usr/local`).
     </details>
 
-  Building:
+  ##### Building Llama with CLBlast
 
   - Build with make:
     ```sh
     make LLAMA_CLBLAST=1
     ```
-  - CMake:
+  - CMake (Unix):
     ```sh
     mkdir build
     cd build
     cmake .. -DLLAMA_CLBLAST=ON -DCLBlast_dir=/some/path
     cmake --build . --config Release
     ```
+  - CMake (Windows):
+    ```cmd
+    set CL_BLAST_CMAKE_PKG="C:/CLBlast/lib/cmake/CLBlast"
+    git clone https://github.com/ggerganov/llama.cpp
+    cd llama.cpp
+    mkdir build
+    cd build
+    cmake .. -DBUILD_SHARED_LIBS=OFF -DLLAMA_CLBLAST=ON -DCMAKE_PREFIX_PATH=%CL_BLAST_CMAKE_PKG% -G "Visual Studio 17 2022" -A x64
+    cmake --build . --config Release
+    cmake --install . --prefix C:/LlamaCPP
+    ```
 
-  Running:
+  ##### Running Llama with CLBlast
 
   The CLBlast build supports `--gpu-layers|-ngl` like the CUDA version does.
 
@@ -728,8 +743,6 @@ python3 convert.py pygmalion-7b/ --outtype q4_1
   - [LLaMA 2 7B chat](https://huggingface.co/TheBloke/Llama-2-7B-chat-GGML)
   - [LLaMA 2 13B chat](https://huggingface.co/TheBloke/Llama-2-13B-chat-GGML)
   - [LLaMA 2 70B chat](https://huggingface.co/TheBloke/Llama-2-70B-chat-GGML)
-- Specify `-eps 1e-5` for best generation quality
-- Specify `-gqa 8` for 70B models to work
 
 ### Verifying the model files
 
